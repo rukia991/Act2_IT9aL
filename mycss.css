@@ -648,3 +648,69 @@ color: #ff3838;
 .logout-dropdown .logout-button:hover {
     background-color: #f2f2f2;
 }
+
+.form-container {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    position: absolute;
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-container.show {
+    opacity: 1;
+    transform: translateY(0);
+    position: relative;
+    z-index: 1;
+}
+
+.form-wrapper {
+    
+    display: block;
+    margin: 10px auto;
+    width: 100%;
+    max-width: 400px;
+    height: 500px;
+}
+
+.form-slider-container {
+    position: relative;
+    width: 100%;
+    height: 60%;
+    overflow: hidden;
+}
+
+.form-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.form-slide.active {
+    transform: translateX(0);
+    opacity: 1;
+    z-index: 2;
+}
+
+.form-slide.exit {
+    transform: translateX(-100%);
+    opacity: 0;
+    z-index: 1;
+}
+.link-button {
+    display: block;
+    margin-top: 15px;
+    text-align: center;
+    color: #f2f2f2;
+    font-weight: bold;
+    cursor: pointer;
+}
+.link-button:hover {
+    text-decoration: underline;
+    color: #00ff00;
+}

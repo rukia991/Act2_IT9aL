@@ -3,8 +3,35 @@ include "../dbconnect.php";
 session_start();
 
 $error = '';
+$success = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Handle registration
+if (isset($_POST['register'])) {
+    $username = trim($_POST['username']);
+    $password = $_POST['password'];
+
+    // Check if username exists
+    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) {
+        $error = "Username already exists.";
+    } else {
+        $hashed = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("INSERT INTO users (username, password, created_at) VALUES (?, ?, NOW())");
+        $stmt->bind_param("ss", $username, $hashed);
+        if ($stmt->execute()) {
+            $success = "Registration successful. You can now log in.";
+        } else {
+            $error = "Registration failed. Try again.";
+        }
+    }
+}
+
+// Handle login
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
 
@@ -36,23 +63,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-    <div class="page-container">
-        <div class="login-box">
-            <h2>Login</h2>
-            <?php if ($error): ?>
-                <p style="color:red;"><?= $error ?></p>
-            <?php endif; ?>
-            <form method="POST">
-                <label>Username</label>
-                <input type="text" name="username" required>
+    <div class="form-wrapper">
+        <div class="page-container">
+            <div class="login-box" id="loginBox">
+                <h2 id="formTitle">Login</h2>
 
-                <label>Password</label>
-                <input type="password" name="password" required>
+                <?php if ($error): ?>
+                    <p style="color:red;"><?= $error ?></p>
+                <?php elseif ($success): ?>
+                    <p style="color:limegreen;"><?= $success ?></p>
+                <?php endif; ?>
 
-                <button type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
-            </form>
+                <!-- Form slider container -->
+                <div class="form-slider-container" id="formSlider">
+                    <!-- Login Form -->
+                    <form method="POST" id="loginForm" class="form-slide active">
+                        <label>Username</label>
+                        <input type="text" name="username" required>
+                        <label>Password</label>
+                        <input type="password" name="password" required>
+                        <button type="submit" name="login"><i class="fas fa-sign-in-alt"></i> Login</button>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form method="POST" id="registerForm" class="form-slide">
+                        <label>Username</label>
+                        <input type="text" name="username" required>
+                        <label>Password</label>
+                        <input type="password" name="password" required>
+                        <button type="submit" name="register"><i class="fas fa-user-plus"></i> Register</button>
+                    </form>
+                </div>
+                <span class="link-button" onclick="toggleForm()">Don't have an account? Register</span>
+            </div>
         </div>
     </div>
+
+    <script>
+        const toggle = document.querySelector('.link-button');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const formTitle = document.getElementById('formTitle');
+
+        let showingLogin = true;
+
+        function toggleForm() {
+            if (showingLogin) {
+                loginForm.classList.remove('active');
+                loginForm.classList.add('exit');
+                registerForm.classList.add('active');
+                registerForm.classList.remove('exit');
+                formTitle.textContent = 'Register';
+                toggle.textContent = 'Already have an account? Login';
+            } else {
+                registerForm.classList.remove('active');
+                registerForm.classList.add('exit');
+                loginForm.classList.add('active');
+                loginForm.classList.remove('exit');
+                formTitle.textContent = 'Login';
+                toggle.textContent = "Don't have an account? Register";
+            }
+            showingLogin = !showingLogin;
+        }
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                const username = form.querySelector('input[name="username"]').value.trim();
+                const password = form.querySelector('input[name="password"]').value.trim();
+
+                if (username.length < 3 || password.length < 6) {
+                    e.preventDefault();
+                    alert("Username must be at least 3 characters, password at least 6.");
+                }
+            });
+        });
+
+    </script>
 </body>
 
 </html>
